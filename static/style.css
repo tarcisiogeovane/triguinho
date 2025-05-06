@@ -1,0 +1,80 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    text-align: center;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #333;
+}
+
+.balance {
+    font-size: 1.2em;
+    margin: 10px 0;
+}
+
+.reels {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.reel {
+    width: 80px;
+    height: 80px;
+    line-height: 80px;
+    font-size: 40px;
+    border: 2px solid #333;
+    margin: 0 10px;
+    background-color: #fff;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+#message {
+    margin: 20px 0;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.deposit {
+    margin-top: 20px;
+}
+
+.deposit input {
+    padding: 5px;
+    font-size: 1em;
+    width: 100px;
+}
+
+.deposit button {
+    background-color: #007bff;
+}
+
+.deposit button:hover {
+    background-color: #0056b3;
+}

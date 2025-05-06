@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Jogo do Triguinho</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Jogo do Triguinho</h1>
+        <div class="balance">Saldo: <span id="balance">{{ balance }}</span> créditos</div>
+        <div class="reels">
+            <div class="reel" id="reel1">🎰</div>
+            <div class="reel" id="reel2">🎰</div>
+            <div class="reel" id="reel3">🎰</div>
+        </div>
+        <button id="spinButton">Girar!</button>
+        <div id="message"></div>
+        <div class="deposit">
+            <input type="number" id="depositAmount" placeholder="Quantos créditos?">
+            <button id="depositButton">Depositar</button>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>
