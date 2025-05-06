@@ -32,10 +32,10 @@ SPIN_COST = 10
 INITIAL_BALANCE = 100
 RTP = 0.95
 DAILY_DEPOSIT_LIMIT = 500
-MERCHANT_PIX_KEY = "tarcisio.geovane1@gmail.com"  # Chave Pix fornecida
+MERCHANT_PIX_KEY = "tarcisio.geovane1@gmail.com"  # Chave Pix cadastrada
 
 # Configuração do Mercado Pago
-mp = mercadopago.SDK("TEST-1341189477037903-050610-d109b71ed6ab7f7df17057bce80e3cfe-374217328")  # Access token de teste
+mp = mercadopago.SDK("APP_USR-1341189477037903-050610-0728701ea1ed2193f341c52f2bb0f046-374217328")  # Access token de produção
 
 # Inicializa o banco de dados
 def init_db():
@@ -243,7 +243,7 @@ def deposit_pix():
                 "first_name": current_user.username,
                 "identification": {
                     "type": "CPF",
-                    "number": "123.456.789-09"  # Substitua por um CPF de teste válido
+                    "number": "017.154.504-42"  # CPF real fornecido
                 }
             },
             "date_of_expiration": expiration_date
@@ -281,7 +281,7 @@ def check_payment(payment_id):
     try:
         time.sleep(2)  # Pequeno atraso para evitar verificações prematuras
         payment = mp.payment().get(payment_id)["response"]
-        app.logger.info(f"Verificação de pagamento: ID {payment_id}, Status: {payment['status']}")
+        app.logger.info(f"Verificação de pagamento: ID {payment_id}, Status: {payment['status']}, Detalhes: {json.dumps(payment, indent=2)}")
         if payment["status"] == "approved":
             amount = payment["transaction_amount"]
             with sqlite3.connect("database/triguinho.db") as conn:
@@ -295,7 +295,7 @@ def check_payment(payment_id):
             app.logger.info(f"Pagamento Pix aprovado: ID {payment_id}, Valor: {amount}")
             return jsonify({"balance": current_user.balance, "message": f"Depósito de {amount} reais confirmado!"})
         elif payment["status"] == "rejected" or payment["status"] == "cancelled":
-            app.logger.error(f"Pagamento Pix rejeitado ou cancelado: ID {payment_id}, Status: {payment['status']}")
+            app.logger.error(f"Pagamento Pix rejeitado ou cancelado: ID {payment_id}, Status: {payment['status']}, Detalhes: {json.dumps(payment, indent=2)}")
             return jsonify({"error": f"Pagamento rejeitado ou cancelado: Status {payment['status']}"})
         return jsonify({"status": payment["status"]})
     except Exception as e:

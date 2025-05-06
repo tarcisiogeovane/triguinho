@@ -2,38 +2,581 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jogo do Triguinho</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet">
+    <!-- GSAP -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <!-- Howler.js -->
+    <script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #8B0000, #FFD700);
+            color: #fff;
+            font-family: 'Impact', Arial, sans-serif;
+            overflow-x: hidden;
+            position: relative;
+            margin: 0;
+        }
+        .game-container {
+            max-width: 100%;
+            padding: 10px;
+            background: #1C2526;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+            position: relative;
+            z-index: 10;
+        }
+        .slot-machine {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            background: #FFD700;
+            padding: 10px;
+            border-radius: 10px;
+            border: 3px solid #8B0000;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto;
+        }
+        .reel {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #fff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #FFD700;
+            transition: transform 0.1s;
+        }
+        .reel .symbol {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .multiplier {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: #FFD700;
+            text-shadow: 0 0 15px #FF0000, 0 0 30px #FF0000;
+            display: none;
+            z-index: 1000;
+        }
+        .btn-spin {
+            background: linear-gradient(#FF4500, #8B0000);
+            border: none;
+            color: #FFD700;
+            font-size: 1.5rem;
+            padding: 10px 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(255, 69, 0, 0.8);
+            transition: transform 0.2s;
+            width: 100%;
+            max-width: 300px;
+        }
+        .btn-spin:hover {
+            transform: scale(1.05);
+        }
+        .balance {
+            font-size: 1.5rem;
+            color: #FFD700;
+            text-shadow: 0 0 10px #000;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 999;
+            pointer-events: none;
+        }
+        .modal-content {
+            background: #1C2526;
+            color: #FFD700;
+            border: 2px solid #FFD700;
+        }
+        .modal-header, .modal-footer {
+            border-color: #FFD700;
+        }
+        .form-control {
+            background: #2E2E2E;
+            color: #FFD700;
+            border: 2px solid #FFD700;
+        }
+        .btn-primary {
+            background: #FF4500;
+            border: none;
+            font-size: 1.2rem;
+            padding: 10px;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background: #8B0000;
+        }
+        .background-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .star {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #FFD700;
+            border-radius: 50%;
+            opacity: 0;
+        }
+        .wheat-mascot {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 100px;
+            font-size: 60px;
+            text-align: center;
+            z-index: 100;
+        }
+        .wheat-mascot::before {
+            content: '🌾';
+            display: block;
+            animation: wiggle 2s infinite;
+        }
+        @media (max-width: 576px) {
+            .wheat-mascot {
+                width: 80px;
+                height: 80px;
+                font-size: 50px;
+            }
+            .slot-machine {
+                max-width: 300px;
+                gap: 3px;
+            }
+            .reel {
+                font-size: 2rem;
+            }
+            .multiplier {
+                font-size: 2.5rem;
+            }
+            .btn-spin {
+                font-size: 1.2rem;
+                padding: 8px 20px;
+            }
+            .balance {
+                font-size: 1.2rem;
+            }
+        }
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Jogo do Triguinho</h1>
-        <div class="user-info">
-            Bem-vindo, {{ current_user.username }}! <a href="{{ url_for('logout') }}">Sair</a>
+    <div class="background-effects" id="backgroundEffects"></div>
+    <div class="game-container">
+        <div class="wheat-mascot" id="wheatMascot"></div>
+        <div class="balance text-center">Saldo: R$ <span id="balance">{{ balance }}</span></div>
+        <div class="slot-machine">
+            <div class="reel" id="reel0"><div class="symbol">🌾</div></div>
+            <div class="reel" id="reel1"><div class="symbol">🍞</div></div>
+            <div class="reel" id="reel2"><div class="symbol">🥖</div></div>
+            <div class="reel" id="reel3"><div class="symbol">🌟</div></div>
+            <div class="reel" id="reel4"><div class="symbol">🍚</div></div>
+            <div class="reel" id="reel5"><div class="symbol">🌾</div></div>
+            <div class="reel" id="reel6"><div class="symbol">🍞</div></div>
+            <div class="reel" id="reel7"><div class="symbol">🥖</div></div>
+            <div class="reel" id="reel8"><div class="symbol">🌟</div></div>
         </div>
-        <div class="balance">Saldo: <span id="balance">{{ balance }}</span> reais</div>
-        <div class="reels">
-            <div class="reel" id="reel1">🎰</div>
-            <div class="reel" id="reel2">🎰</div>
-            <div class="reel" id="reel3">🎰</div>
+        <div class="text-center mt-3">
+            <button class="btn btn-spin" id="spinButton">Girar (R$ 10) <i class="fas fa-star"></i></button>
         </div>
-        <button id="spinButton">Girar!</button>
-        <div id="message"></div>
-        <div class="deposit">
-            <input type="number" id="depositAmount" placeholder="Quantos reais?" step="0.01">
-            <button id="depositPixButton">Depositar via Pix</button>
+        <div class="text-center mt-3 d-flex justify-content-center gap-2">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#depositModal">Depositar <i class="fas fa-money-bill-wave"></i></button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#withdrawModal">Sacar <i class="fas fa-wallet"></i></button>
         </div>
-        <div class="withdraw">
-            <input type="number" id="withdrawAmount" placeholder="Quantos reais?" step="0.01">
-            <button id="withdrawButton">Sacar</button>
-        </div>
-        <div id="qrCode"></div>
-        <div class="responsible-gaming">
-            <p>Jogue com responsabilidade. Limite diário: 500 reais.</p>
-            <a href="#" id="selfExclude">Solicitar autoexclusão</a>
+        <div class="multiplier" id="multiplier"></div>
+    </div>
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Modal de Depósito -->
+    <div class="modal fade" id="depositModal" tabindex="-1" aria-labelledby="depositModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="depositModalLabel">Depositar via Pix</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="depositForm">
+                        <div class="mb-3">
+                            <label for="depositAmount" class="form-label">Valor (R$)</label>
+                            <input type="number" class="form-control" id="depositAmount" step="0.01" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Gerar Pix</button>
+                    </form>
+                    <div id="pixResult" class="mt-3" style="display: none;">
+                        <p>Copie o código Pix ou escaneie o QR code:</p>
+                        <textarea id="pixCode" class="form-control" rows="4" readonly></textarea>
+                        <img id="qrCodeImage" class="img-fluid mt-2" style="display: none;">
+                        <p id="pixStatus" class="mt-2"></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <script src="/static/script.js"></script>
+
+    <!-- Modal de Saque -->
+    <div class="modal fade" id="withdrawModal" tabindex="-1" aria-labelledby="withdrawModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="withdrawModalLabel">Sacar</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="withdrawForm">
+                        <div class="mb-3">
+                            <label for="withdrawAmount" class="form-label">Valor (R$)</label>
+                            <input type="number" class="form-control" id="withdrawAmount" step="0.01" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Solicitar Saque</button>
+                    </form>
+                    <div id="withdrawResult" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Símbolos do jogo
+        const SYMBOLS = ["🌾", "🍞", "🥖", "🌟", "🍚"];
+        let isSpinning = false;
+
+        // Sons com Howler.js
+        const soundSpin = new Howl({ src: ['https://freesound.org/data/previews/171/171104_71257-lq.mp3'] }); // Som de giro
+        const soundWin = new Howl({ src: ['https://freesound.org/data/previews/511/511484_5121236-lq.mp3'] }); // Som de vitória
+        const soundCoins = new Howl({ src: ['https://freesound.org/data/previews/270/270303_5121236-lq.mp3'] }); // Som de moedas
+        const soundDrum = new Howl({ src: ['https://freesound.org/data/previews/171/171671_2435888-lq.mp3'] }); // Som de tambor
+        const soundExplosion = new Howl({ src: ['https://freesound.org/data/previews/423/423123_2280639-lq.mp3'] }); // Som de explosão
+        const soundLaugh = new Howl({ src: ['https://freesound.org/data/previews/339/339814_5988246-lq.mp3'] }); // Risada do trigo
+        const soundJackpot = new Howl({ src: ['https://freesound.org/data/previews/511/511487_5121236-lq.mp3'] }); // Som de jackpot
+
+        // Configuração do canvas para partículas
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const particles = [];
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 15 + 3;
+                this.speedX = Math.random() * 8 - 4;
+                this.speedY = Math.random() * 8 - 4;
+                this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                this.type = Math.random() > 0.7 ? 'coin' : Math.random() > 0.4 ? 'star' : 'firework';
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.size *= 0.93;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                if (this.type === 'coin') {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.type === 'star') {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.beginPath();
+                    for (let i = 0; i < 5; i++) {
+                        ctx.lineTo(Math.cos(Math.PI / 2.5 * i) * this.size, Math.sin(Math.PI / 2.5 * i) * this.size);
+                        ctx.lineTo(Math.cos(Math.PI / 5 + Math.PI / 2.5 * i) * (this.size / 2), Math.sin(Math.PI / 5 + Math.PI / 2.5 * i) * (this.size / 2));
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                } else {
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y - this.size);
+                    ctx.lineTo(this.x + this.size / 2, this.y + this.size);
+                    ctx.lineTo(this.x - this.size / 2, this.y + this.size);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+        }
+
+        function createParticles(x, y, count = 30) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].size < 0.5) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // Efeitos de fundo (estrelas)
+        function createBackgroundEffects() {
+            const container = document.getElementById('backgroundEffects');
+            for (let i = 0; i < 20; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                container.appendChild(star);
+                gsap.to(star, {
+                    opacity: 1,
+                    duration: Math.random() * 1 + 0.5,
+                    repeat: -1,
+                    yoyo: true,
+                    delay: Math.random() * 2
+                });
+            }
+        }
+        createBackgroundEffects();
+
+        // Animações do mascote de trigo
+        const wheatMascot = document.getElementById('wheatMascot');
+        function animateWheat(spin = false, win = false, nearWin = false) {
+            if (spin) {
+                gsap.to(wheatMascot, { y: -30, rotation: 360, duration: 0.8, repeat: 2, yoyo: true });
+                soundLaugh.play();
+            } else if (win) {
+                gsap.to(wheatMascot, { scale: 1.3, x: 10, yoyo: true, repeat: 4, duration: 0.2 });
+                createParticles(window.innerWidth / 2, 50, 15);
+                soundLaugh.play();
+            } else if (nearWin) {
+                gsap.to(wheatMascot, { rotation: -15, yoyo: true, repeat: 3, duration: 0.15 });
+            }
+        }
+
+        // Função para girar a grade 3x3
+        function spinReels(result) {
+            if (isSpinning) return;
+            isSpinning = true;
+            document.getElementById('spinButton').disabled = true;
+            soundSpin.play();
+            soundDrum.play();
+            animateWheat(true);
+
+            for (let i = 0; i < 9; i++) {
+                const reel = document.getElementById(`reel${i}`);
+                const symbol = reel.querySelector('.symbol');
+                gsap.to(symbol, {
+                    y: '+=1000',
+                    duration: 1.5 + (i % 3) * 0.3,
+                    ease: 'power2.in',
+                    onComplete: () => {
+                        symbol.textContent = result[i];
+                        gsap.fromTo(symbol, { y: '-1000' }, { y: '0', duration: 0.6, ease: 'bounce.out' });
+                        gsap.to(reel, { scale: 1.1, rotation: 5, yoyo: true, repeat: 1, duration: 0.1 });
+                        if (i === 8) {
+                            isSpinning = false;
+                            document.getElementById('spinButton').disabled = false;
+                            checkNearWin(result);
+                        }
+                    }
+                });
+            }
+        }
+
+        // Função para verificar "quase ganhos"
+        function checkNearWin(grid) {
+            const nearWins = [];
+            // Verificar linhas
+            for (let i = 0; i < 3; i++) {
+                const row = [grid[i*3], grid[i*3+1], grid[i*3+2]];
+                if ((row[0] === row[1] && row[1] !== row[2]) || (row[1] === row[2] && row[0] !== row[1])) {
+                    nearWins.push([i*3, i*3+1, i*3+2]);
+                }
+            }
+            // Verificar colunas
+            for (let j = 0; j < 3; j++) {
+                const col = [grid[j], grid[j+3], grid[j+6]];
+                if ((col[0] === col[1] && col[1] !== col[2]) || (col[1] === col[2] && col[0] !== col[1])) {
+                    nearWins.push([j, j+3, j+6]);
+                }
+            }
+            if (nearWins.length > 0) {
+                nearWins.forEach(positions => {
+                    positions.forEach(pos => {
+                        const reel = document.getElementById(`reel${pos}`);
+                        gsap.to(reel, { x: 10, yoyo: true, repeat: 3, duration: 0.1 });
+                    });
+                });
+                animateWheat(false, false, true);
+                soundCoins.play();
+                alert('Quase ganhou! Tenta de novo!');
+            }
+        }
+
+        // Função para mostrar multiplicador
+        function showMultiplier(payout) {
+            const multiplierDiv = document.getElementById('multiplier');
+            let multiplier = '';
+            if (payout >= 5000) multiplier = 'x500';
+            else if (payout >= 2000) multiplier = 'x200';
+            else if (payout >= 1000) multiplier = 'x100';
+            else if (payout >= 500) multiplier = 'x50';
+            else if (payout >= 200) multiplier = 'x20';
+            else if (payout >= 100) multiplier = 'x15';
+            else if (payout >= 50) multiplier = 'x10';
+            else if (payout >= 40) multiplier = 'x5';
+            else if (payout >= 30) multiplier = 'x3';
+            else if (payout >= 20) multiplier = 'x2';
+            else if (payout >= 10) multiplier = 'x1';
+
+            if (multiplier) {
+                multiplierDiv.textContent = multiplier;
+                multiplierDiv.style.display = 'block';
+                soundWin.play();
+                if (payout >= 1000) soundJackpot.play();
+                else soundExplosion.play();
+                createParticles(window.innerWidth / 2, window.innerHeight / 2, 50);
+                animateWheat(false, true);
+                gsap.fromTo(multiplierDiv, { scale: 0, rotation: -360 }, { scale: 1, rotation: 0, duration: 0.8, ease: 'back.out' });
+                gsap.to(multiplierDiv, { scale: 1.3, yoyo: true, repeat: 5, duration: 0.2 });
+                gsap.to(multiplierDiv, { opacity: 0, duration: 0.8, delay: 3, onComplete: () => {
+                    multiplierDiv.style.display = 'none';
+                } });
+            }
+        }
+
+        // Evento de girar
+        document.getElementById('spinButton').addEventListener('click', () => {
+            fetch('/spin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                spinReels(data.result);
+                document.getElementById('balance').textContent = data.balance.toFixed(2);
+                if (data.payout > 0) {
+                    showMultiplier(data.payout);
+                    setTimeout(() => alert(data.message), 3500); // Atraso para animações
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao girar:', error);
+                alert('Erro ao processar o giro.');
+            });
+        });
+
+        // Evento de depósito
+        document.getElementById('depositForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const amount = document.getElementById('depositAmount').value;
+            fetch('/deposit_pix', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `amount=${amount}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('pixStatus').textContent = data.error;
+                    return;
+                }
+                document.getElementById('pixResult').style.display = 'block';
+                document.getElementById('pixCode').value = data.qr_code;
+                document.getElementById('pixStatus').textContent = data.message;
+                const qrCodeImage = document.getElementById('qrCodeImage');
+                qrCodeImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(data.qr_code)}`;
+                qrCodeImage.style.display = 'block';
+
+                // Verificar pagamento
+                const paymentId = data.payment_id;
+                const checkInterval = setInterval(() => {
+                    fetch(`/check_payment/${paymentId}`)
+                    .then(res => res.json())
+                    .then(paymentData => {
+                        if (paymentData.error) {
+                            document.getElementById('pixStatus').textContent = paymentData.error;
+                            clearInterval(checkInterval);
+                        } else if (paymentData.status === 'approved') {
+                            document.getElementById('pixStatus').textContent = paymentData.message;
+                            document.getElementById('balance').textContent = paymentData.balance.toFixed(2);
+                            createParticles(window.innerWidth / 2, window.innerHeight / 2, 40);
+                            animateWheat(false, true);
+                            soundCoins.play();
+                            clearInterval(checkInterval);
+                        }
+                    });
+                }, 5000);
+            })
+            .catch(error => {
+                console.error('Erro ao depositar:', error);
+                document.getElementById('pixStatus').textContent = 'Erro ao gerar o Pix.';
+            });
+        });
+
+        // Evento de saque
+        document.getElementById('withdrawForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const amount = document.getElementById('withdrawAmount').value;
+            fetch('/withdraw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `amount=${amount}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('withdrawResult').textContent = data.error;
+                    return;
+                }
+                document.getElementById('withdrawResult').textContent = data.message;
+                document.getElementById('balance').textContent = data.balance.toFixed(2);
+                createParticles(window.innerWidth / 2, window.innerHeight / 2, 30);
+                animateWheat(false, true);
+                soundCoins.play();
+            })
+            .catch(error => {
+                console.error('Erro ao sacar:', error);
+                document.getElementById('withdrawResult').textContent = 'Erro ao processar o saque.';
+            });
+        });
+    </script>
 </body>
 </html>
