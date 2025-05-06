@@ -13,10 +13,17 @@ body {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    width: 100%;
 }
 
 h1 {
     color: #333;
+}
+
+.user-info {
+    margin-bottom: 10px;
+    text-align: right;
 }
 
 .balance {
@@ -39,6 +46,16 @@ h1 {
     margin: 0 10px;
     background-color: #fff;
     border-radius: 5px;
+    transition: transform 0.5s ease;
+}
+
+.reel.spinning {
+    animation: spin 0.5s linear 5;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 button {
@@ -62,7 +79,7 @@ button:hover {
 }
 
 .deposit {
-    margin-top: 20px;
+    margin: 20px 0;
 }
 
 .deposit input {
@@ -77,4 +94,62 @@ button:hover {
 
 .deposit button:hover {
     background-color: #0056b3;
+}
+
+.responsible-gaming {
+    margin-top: 20px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+input {
+    padding: 8px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.flash {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+.flash.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.flash.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.flash.warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
 }

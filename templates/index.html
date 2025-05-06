@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <title>Jogo do Triguinho</title>
     <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>Jogo do Triguinho</h1>
-        <div class="balance">Saldo: <span id="balance">{{ balance }}</span> créditos</div>
+        <div class="user-info">
+            Bem-vindo, {{ current_user.username }}! <a href="{{ url_for('logout') }}">Sair</a>
+        </div>
+        <div class="balance">Saldo: <span id="balance">{{ balance }}</span> reais</div>
         <div class="reels">
             <div class="reel" id="reel1">🎰</div>
             <div class="reel" id="reel2">🎰</div>
@@ -17,8 +21,17 @@
         <button id="spinButton">Girar!</button>
         <div id="message"></div>
         <div class="deposit">
-            <input type="number" id="depositAmount" placeholder="Quantos créditos?">
-            <button id="depositButton">Depositar</button>
+            <input type="number" id="depositAmount" placeholder="Quantos reais?" step="0.01">
+            <button id="depositPixButton">Depositar via Pix</button>
+        </div>
+        <div class="withdraw">
+            <input type="number" id="withdrawAmount" placeholder="Quantos reais?" step="0.01">
+            <button id="withdrawButton">Sacar</button>
+        </div>
+        <div id="qrCode"></div>
+        <div class="responsible-gaming">
+            <p>Jogue com responsabilidade. Limite diário: 500 reais.</p>
+            <a href="#" id="selfExclude">Solicitar autoexclusão</a>
         </div>
     </div>
     <script src="/static/script.js"></script>

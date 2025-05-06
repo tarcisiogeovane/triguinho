@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel de Administração - Jogo do Triguinho</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Painel de Administração</h1>
+        <a href="{{ url_for('index') }}">Voltar ao jogo</a>
+        <h2>Status da Banca</h2>
+        <p>Saldo: {{ banca[0] }} créditos</p>
+        <p>Total de giros: {{ banca[1] }}</p>
+        <p>Total de pagamentos: {{ banca[2] }} créditos</p>
+        <h2>Usuários</h2>
+        <table>
+            <tr>
+                <th>Usuário</th>
+                <th>Saldo</th>
+                <th>Último Login</th>
+            </tr>
+            {% for user in users %}
+            <tr>
+                <td>{{ user[0] }}</td>
+                <td>{{ user[1] }}</td>
+                <td>{{ user[2] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <h2>Últimas Transações</h2>
+        <table>
+            <tr>
+                <th>ID do Usuário</th>
+                <th>Tipo</th>
+                <th>Valor</th>
+                <th>Data/Hora</th>
+                <th>Resultado</th>
+            </tr>
+            {% for tx in transactions %}
+            <tr>
+                <td>{{ tx[0] }}</td>
+                <td>{{ tx[1] }}</td>
+                <td>{{ tx[2] }}</td>
+                <td>{{ tx[3] }}</td>
+                <td>{{ tx[4] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>
