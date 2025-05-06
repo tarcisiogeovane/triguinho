@@ -2,11 +2,13 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, f
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import sqlite3
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 import hashlib
 import mercadopago
 import logging
 import uuid
+import json
+import time
 
 app = Flask(__name__)
 app.secret_key = "triguinho_secret_key_2025"
@@ -30,10 +32,10 @@ SPIN_COST = 10
 INITIAL_BALANCE = 100
 RTP = 0.95
 DAILY_DEPOSIT_LIMIT = 500
-MERCHANT_PIX_KEY = "52d84f0b-cebf-4057-adda-f5d368b5bb8c"
+MERCHANT_PIX_KEY = "tarcisio.geovane1@gmail.com"  # Chave Pix fornecida
 
 # Configuração do Mercado Pago
-mp = mercadopago.SDK("TEST-1341189477037903-050610-d109b71ed6ab7f7df17057bce80e3cfe-374217328")  # Substitua pelo seu access_token de teste
+mp = mercadopago.SDK("TEST-1341189477037903-050610-d109b71ed6ab7f7df17057bce80e3cfe-374217328")  # Access token de teste
 
 # Inicializa o banco de dados
 def init_db():
@@ -230,44 +232,56 @@ def deposit_pix():
         if not check_deposit_limit(current_user.id, amount):
             return jsonify({"error": f"Limite diário de depósito ({DAILY_DEPOSIT_LIMIT} reais) excedido!"})
 
+        # Dados para o pagamento Pix
+        expiration_date = (datetime.now() + timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
         payment_data = {
             "transaction_amount": amount,
             "description": "Depósito Jogo do Triguinho",
             "payment_method_id": "pix",
             "payer": {
-                "email": f"{current_user.username}@example.com",
+                "email": f"testuser{current_user.id}_{int(time.time())}@gmail.com",  # E-mail único com timestamp
                 "first_name": current_user.username,
-                "identification": {"type": "CPF", "number": "12345678900"}
+                "identification": {
+                    "type": "CPF",
+                    "number": "123.456.789-09"  # Substitua por um CPF de teste válido
+                }
             },
-            "notification_url": "https://your-app.com/webhook"
+            "date_of_expiration": expiration_date
         }
         request_options = mercadopago.config.RequestOptions()
-        request_options.custom_headers = {"X-Idempotency-Key": str(uuid.uuid4())}
+        request_options.custom_headers = {
+            "X-Idempotency-Key": str(uuid.uuid4()),
+            "Content-Type": "application/json"
+        }
+        app.logger.info(f"Enviando requisição Pix: {json.dumps(payment_data, indent=2)}")
         result = mp.payment().create(payment_data, request_options)
         payment = result["response"]
 
+        app.logger.info(f"Resposta do Mercado Pago: {json.dumps(payment, indent=2)}")
         if payment["status"] == "pending":
             qr_code = payment.get("point_of_interaction", {}).get("transaction_data", {}).get("qr_code", "")
             if not qr_code:
                 app.logger.error("QR code não encontrado na resposta do Mercado Pago.")
-                return jsonify({"error": "Erro ao gerar o código Pix."})
+                return jsonify({"error": "Erro ao gerar o código Pix: QR code ausente."})
             app.logger.info(f"Pagamento Pix criado: ID {payment['id']}, Valor: {amount}, Código: {qr_code}")
             return jsonify({
                 "qr_code": qr_code,
                 "payment_id": payment["id"],
                 "message": "Copie o código Pix ou escaneie o QR code."
             })
-        app.logger.error(f"Pagamento Pix não criado: {payment}")
+        app.logger.error(f"Pagamento Pix não criado: {json.dumps(payment, indent=2)}")
         return jsonify({"error": f"Erro ao criar o pagamento Pix: Status {payment['status']}"})
     except Exception as e:
-        app.logger.error(f"Erro na rota /deposit_pix: {e}")
+        app.logger.error(f"Erro na rota /deposit_pix: {str(e)}")
         return jsonify({"error": f"Erro ao criar o pagamento Pix: {str(e)}"})
 
 @app.route("/check_payment/<payment_id>")
 @login_required
 def check_payment(payment_id):
     try:
+        time.sleep(2)  # Pequeno atraso para evitar verificações prematuras
         payment = mp.payment().get(payment_id)["response"]
+        app.logger.info(f"Verificação de pagamento: ID {payment_id}, Status: {payment['status']}")
         if payment["status"] == "approved":
             amount = payment["transaction_amount"]
             with sqlite3.connect("database/triguinho.db") as conn:
@@ -280,6 +294,9 @@ def check_payment(payment_id):
                 conn.commit()
             app.logger.info(f"Pagamento Pix aprovado: ID {payment_id}, Valor: {amount}")
             return jsonify({"balance": current_user.balance, "message": f"Depósito de {amount} reais confirmado!"})
+        elif payment["status"] == "rejected" or payment["status"] == "cancelled":
+            app.logger.error(f"Pagamento Pix rejeitado ou cancelado: ID {payment_id}, Status: {payment['status']}")
+            return jsonify({"error": f"Pagamento rejeitado ou cancelado: Status {payment['status']}"})
         return jsonify({"status": payment["status"]})
     except Exception as e:
         app.logger.error(f"Erro na rota /check_payment: {e}")

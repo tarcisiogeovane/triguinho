@@ -69,6 +69,7 @@ function depositPix() {
     if (isNaN(amount) || amount <= 0) {
         message.textContent = "Insira um valor válido.";
         alert("Insira um valor válido.");
+        qrCodeDiv.innerHTML = "";
         return;
     }
 
@@ -78,7 +79,9 @@ function depositPix() {
         body: `amount=${amount}`
     })
         .then(response => {
-            if (!response.ok) throw new Error("Erro na requisição de depósito Pix");
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.error || "Erro na requisição de depósito Pix"); });
+            }
             return response.json();
         })
         .then(data => {
@@ -105,7 +108,7 @@ function depositPix() {
         .catch(error => {
             console.error("Erro no depósito Pix:", error);
             message.textContent = "Erro ao criar pagamento Pix.";
-            alert("Erro ao criar pagamento Pix.");
+            alert(`Erro ao criar pagamento Pix: ${error.message}`);
             qrCodeDiv.innerHTML = "";
         });
 }
